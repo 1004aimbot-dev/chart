@@ -129,17 +129,17 @@ export default function Members() {
                                 <thead>
                                     <tr className="bg-slate-950 text-slate-400 border-b border-slate-800">
                                         <th className="p-4 font-medium">이름</th>
-                                        <th className="p-4 font-medium text-center">소프라노</th>
-                                        <th className="p-4 font-medium text-center">알토</th>
-                                        <th className="p-4 font-medium text-center">테너</th>
-                                        <th className="p-4 font-medium text-center">베이스</th>
+                                        <th className="p-4 font-medium text-center">SP</th>
+                                        <th className="p-4 font-medium text-center">AL</th>
+                                        <th className="p-4 font-medium text-center">TN</th>
+                                        <th className="p-4 font-medium text-center">BS</th>
                                         <th className="p-4 font-medium text-center">총원</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-800 text-slate-300">
                                     {choirStats.map(stat => (
                                         <tr key={stat.id} className="hover:bg-slate-800/50 transition-colors">
-                                            <td className="p-4 font-bold text-white">{stat.name}</td>
+                                            <td className="p-4 font-bold text-white">{stat.name.replace(/.*\((.*)\)/, '$1')}</td>
                                             <td className="p-4 text-center">{stat.soprano > 0 ? <span className="text-blue-400 font-medium">{stat.soprano}</span> : <span className="text-slate-600">-</span>}</td>
                                             <td className="p-4 text-center">{stat.alto > 0 ? <span className="text-blue-400 font-medium">{stat.alto}</span> : <span className="text-slate-600">-</span>}</td>
                                             <td className="p-4 text-center">{stat.tenor > 0 ? <span className="text-blue-400 font-medium">{stat.tenor}</span> : <span className="text-slate-600">-</span>}</td>

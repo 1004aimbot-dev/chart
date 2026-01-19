@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 
-const CHOIRS = ['Gloria (글로리아)', 'Immanuel (임마누엘)', 'Galilee (갈릴리)'];
-const PRAISE_TEAMS = ['Praise Team 1 (찬양단 1)', 'Praise Team 2 (찬양단 2)', 'Praise Team 3 (찬양단 3)'];
+const CHOIRS = ['글로리아', '임마누엘', '갈릴리'];
+const PRAISE_TEAMS = ['찬양단 1', '찬양단 2', '찬양단 3'];
 
 export async function seedDatabase() {
     console.log('Starting seed...');

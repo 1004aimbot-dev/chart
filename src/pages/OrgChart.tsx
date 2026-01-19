@@ -217,9 +217,9 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
                             <button onClick={(e) => { e.stopPropagation(); setIsEditing(false); setEditName(node.name); }} className="p-1 text-red-400 hover:bg-red-500/20 rounded"><X size={16} /></button>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`font-medium ${isSelected ? 'text-slate-900' : 'text-slate-100'} ${level === 0 ? 'text-xl' : 'text-base'}`}>
-                                {node.name}
+                        <div className="flex items-center gap-2 min-w-0">
+                            <span className={`font-medium whitespace-nowrap ${isSelected ? 'text-slate-900' : 'text-slate-100'} ${level === 0 ? 'text-xl' : 'text-base'}`}>
+                                {node.name.replace(/.*\((.*)\)/, '$1')}
                             </span>
                         </div>
                     )}

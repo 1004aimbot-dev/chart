@@ -186,7 +186,7 @@ export default function AttendanceView() {
                 >
                     <option value="">조직 선택</option>
                     {choirs.map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
+                        <option key={c.id} value={c.id}>{c.name.replace(/.*\((.*)\)/, '$1')}</option>
                     ))}
                 </select>
             </div>
@@ -264,7 +264,7 @@ export default function AttendanceView() {
                                                             className="font-bold text-lg text-white cursor-pointer hover:text-blue-200 transition-colors"
                                                             onClick={(e) => { e.stopPropagation(); startEditing(member); }}
                                                         >
-                                                            {member.name}
+                                                            {member.name.replace(/.*\((.*)\)/, '$1')}
                                                         </span>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); startEditing(member); }}
@@ -311,7 +311,7 @@ export default function AttendanceView() {
                                         <div className="flex gap-2 w-full md:w-auto">
                                             <button
                                                 onClick={() => handleStatusChange(member.id, 'present')}
-                                                className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-3 md:py-2 rounded-lg font-medium transition-all ${status === 'present'
+                                                className={`flex-1 md:flex-none flex items-center justify-center gap-1 px-2 py-3 md:py-2 rounded-lg font-medium transition-all whitespace-nowrap ${status === 'present'
                                                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
                                                     : 'bg-slate-800 text-slate-500 hover:bg-slate-700 hover:text-slate-300'
                                                     }`}
@@ -321,7 +321,7 @@ export default function AttendanceView() {
                                             </button>
                                             <button
                                                 onClick={() => handleStatusChange(member.id, 'late')}
-                                                className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-3 md:py-2 rounded-lg font-medium transition-all ${status === 'late'
+                                                className={`flex-1 md:flex-none flex items-center justify-center gap-1 px-2 py-3 md:py-2 rounded-lg font-medium transition-all whitespace-nowrap ${status === 'late'
                                                     ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30'
                                                     : 'bg-slate-800 text-slate-500 hover:bg-slate-700 hover:text-slate-300'
                                                     }`}
@@ -331,7 +331,7 @@ export default function AttendanceView() {
                                             </button>
                                             <button
                                                 onClick={() => handleStatusChange(member.id, 'absent')}
-                                                className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-3 md:py-2 rounded-lg font-medium transition-all ${status === 'absent'
+                                                className={`flex-1 md:flex-none flex items-center justify-center gap-1 px-2 py-3 md:py-2 rounded-lg font-medium transition-all whitespace-nowrap ${status === 'absent'
                                                     ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
                                                     : 'bg-slate-800 text-slate-500 hover:bg-slate-700 hover:text-slate-300'
                                                     }`}
@@ -341,7 +341,7 @@ export default function AttendanceView() {
                                             </button>
                                             <button
                                                 onClick={() => toggleMemo(member.id)}
-                                                className={`p-3 md:py-2 rounded-lg transition-all ${hasNote ? 'text-yellow-400 bg-yellow-500/20' : 'text-slate-500 bg-slate-800 hover:bg-slate-700 hover:text-slate-300'
+                                                className={`px-3 py-2 rounded-lg transition-all ${hasNote ? 'text-yellow-400 bg-yellow-500/20' : 'text-slate-500 bg-slate-800 hover:bg-slate-700 hover:text-slate-300'
                                                     }`}
                                             >
                                                 <FileText size={18} />
