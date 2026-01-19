@@ -62,9 +62,9 @@ export default function OrgChart() {
     if (loading) return <div className="p-8 text-center text-gray-500">조직도를 불러오는 중...</div>;
 
     return (
-        <div className="flex h-[calc(100vh-100px)] gap-6 overflow-hidden">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-100px)] gap-6 overflow-hidden relative">
             {/* Left: Tree View */}
-            <div className={`flex-1 flex flex-col space-y-4 transition-all duration-300 ${selectedUnit ? 'w-2/3' : 'w-full'}`}>
+            <div className={`flex-1 flex flex-col space-y-4 transition-all duration-300 w-full ${selectedUnit ? 'md:w-2/3' : 'md:w-full'}`}>
                 <div className="flex justify-between items-center bg-slate-900 p-4 rounded-xl shadow-lg border border-slate-800">
                     <div>
                         <h2 className="text-2xl font-bold text-slate-100 font-serif">조직도</h2>
@@ -75,7 +75,7 @@ export default function OrgChart() {
                         className="flex items-center gap-2 bg-blue-500/10 text-blue-400 px-4 py-2 rounded-lg hover:bg-blue-500/20 transition-colors border border-blue-500/20"
                     >
                         <Plus size={18} />
-                        <span className="font-medium">최상위 조직 추가</span>
+                        <span className="font-medium whitespace-nowrap">최상위 조직 추가</span>
                     </button>
                 </div>
 
@@ -103,7 +103,7 @@ export default function OrgChart() {
 
             {/* Right: Detail Panel */}
             {selectedUnit && (
-                <div className="w-96 flex-shrink-0 animate-in slide-in-from-right duration-300 z-10">
+                <div className="w-full md:w-96 flex-shrink-0 animate-in slide-in-from-right duration-300 z-20 absolute inset-0 md:static">
                     <OrgDetailPanel
                         orgUnit={selectedUnit}
                         onClose={() => setSelectedUnit(null)}
@@ -182,25 +182,25 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
     return (
         <div className="select-none">
             <div
-                className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all group ${isSelected ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-200' : 'hover:bg-slate-50 border-transparent'
-                    } ${level === 0 ? 'mb-2' : ''}`}
-                style={{ marginLeft: `${level * 24}px` }}
+                className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-all group ${isSelected ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-200' : 'hover:bg-slate-800 border-transparent'
+                    } ${level === 0 ? 'mb-2' : 'mb-1'}`}
+                style={{ marginLeft: `${level * 20}px` }}
                 onClick={() => !isEditing && onSelect(node)}
             >
                 {/* Toggle Icon */}
                 <div
                     onClick={handleToggle}
-                    className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+                    className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors"
                 >
-                    {hasChildren && (isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
+                    {hasChildren && (isOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />)}
                 </div>
 
                 {/* Icon */}
-                <div className={`p-1.5 border rounded-md shadow-sm transition-colors ${isSelected
+                <div className={`p-2 border rounded-md shadow-sm transition-colors ${isSelected
                     ? 'bg-blue-600 border-blue-500 text-white'
                     : 'bg-slate-800 border-slate-700 text-slate-400 group-hover:text-white group-hover:border-slate-500 group-hover:bg-slate-700'
                     }`}>
-                    <Users size={16} />
+                    <Users size={18} />
                 </div>
 
                 {/* Name / Edit Input */}
@@ -210,18 +210,18 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
                             <input
                                 value={editName}
                                 onChange={e => setEditName(e.target.value)}
-                                className="px-2 py-1 text-sm bg-slate-800 border border-blue-500 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-auto min-w-[100px]"
+                                className="px-2 py-1 text-base bg-slate-800 border border-blue-500 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-auto min-w-[120px]"
                                 autoFocus
                             />
-                            <button onClick={handleUpdate} className="p-1 text-green-400 hover:bg-green-500/20 rounded"><Check size={14} /></button>
-                            <button onClick={(e) => { e.stopPropagation(); setIsEditing(false); setEditName(node.name); }} className="p-1 text-red-400 hover:bg-red-500/20 rounded"><X size={14} /></button>
+                            <button onClick={handleUpdate} className="p-1 text-green-400 hover:bg-green-500/20 rounded"><Check size={16} /></button>
+                            <button onClick={(e) => { e.stopPropagation(); setIsEditing(false); setEditName(node.name); }} className="p-1 text-red-400 hover:bg-red-500/20 rounded"><X size={16} /></button>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-2">
-                            <span className={`font-medium truncate ${isSelected ? 'text-slate-900' : 'text-white'} ${level === 0 ? 'text-lg' : 'text-base'}`}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`font-medium ${isSelected ? 'text-slate-900' : 'text-slate-100'} ${level === 0 ? 'text-xl' : 'text-base'}`}>
                                 {node.name}
                             </span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border uppercase tracking-wider ${isSelected
+                            <span className={`text-xs px-2 py-0.5 rounded-full border uppercase tracking-wider font-semibold ${isSelected
                                 ? 'bg-blue-100 border-blue-200 text-blue-700'
                                 : 'bg-slate-800 border-slate-600 text-slate-400'
                                 }`}>
