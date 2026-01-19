@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import { getOrgTree, createOrgUnit, deleteOrgUnit, updateOrgUnit } from '../api/org_api';
 import type { OrgUnit } from '../api/org_api';
@@ -6,6 +7,7 @@ import { Users, ChevronRight, ChevronDown, Plus, Trash2, Edit2, Check, X, ArrowU
 import OrgDetailPanel from '../components/OrgDetailPanel';
 
 export default function OrgChart() {
+    const { isAdmin } = useAuth();
     const [searchParams] = useSearchParams();
     const [tree, setTree] = useState<OrgUnit[]>([]);
     const [loading, setLoading] = useState(true);
@@ -76,13 +78,15 @@ export default function OrgChart() {
                     <div>
                         <h2 className="text-2xl font-bold text-slate-100 font-serif">조직도</h2>
                     </div>
-                    <button
-                        onClick={handleAddRoot}
-                        className="flex items-center gap-2 bg-blue-500/10 text-blue-400 px-4 py-2 rounded-lg hover:bg-blue-500/20 transition-colors border border-blue-500/20"
-                    >
-                        <Plus size={18} />
-                        <span className="font-medium whitespace-nowrap">최상위 조직 추가</span>
-                    </button>
+                    {isAdmin && (
+                        <button
+                            onClick={handleAddRoot}
+                            className="flex items-center gap-2 bg-blue-500/10 text-blue-400 px-4 py-2 rounded-lg hover:bg-blue-500/20 transition-colors border border-blue-500/20"
+                        >
+                            <Plus size={18} />
+                            <span className="font-medium whitespace-nowrap">최상위 조직 추가</span>
+                        </button>
+                    )}
                 </div>
 
                 <div
@@ -93,7 +97,7 @@ export default function OrgChart() {
                         <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-slate-500 gap-4">
                             <Users size={48} className="text-slate-700" />
                             <p>등록된 조직 데이터가 없습니다.</p>
-                            <button onClick={handleAddRoot} className="text-blue-400 underline hover:text-blue-300">첫 조직 만들기</button>
+                            {isAdmin && <button onClick={handleAddRoot} className="text-blue-400 underline hover:text-blue-300">첫 조직 만들기</button>}
                         </div>
                     ) : (
                         tree.map(node => (
@@ -142,6 +146,7 @@ interface OrgNodeProps {
 }
 
 function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps) {
+    const { isAdmin } = useAuth();
     const [isOpen, setIsOpen] = useState(true);
     const hasChildren = node.children && node.children.length > 0;
     const isSelected = selectedId === node.id;
@@ -246,27 +251,31 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
 
                 {/* Actions (Hover only or Always on Edit) */}
                 <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${isEditing ? 'hidden' : ''}`}>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                        className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded"
-                        title="이름 수정"
-                    >
-                        <Edit2 size={14} />
-                    </button>
-                    <button
-                        onClick={handleAddChild}
-                        className="p-1.5 text-slate-400 hover:text-green-400 hover:bg-green-500/10 rounded"
-                        title="하위 조직 추가"
-                    >
-                        <Plus size={14} />
-                    </button>
-                    <button
-                        onClick={handleDelete}
-                        className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded"
-                        title="삭제"
-                    >
-                        <Trash2 size={14} />
-                    </button>
+                    {isAdmin && (
+                        <>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                                className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded"
+                                title="이름 수정"
+                            >
+                                <Edit2 size={14} />
+                            </button>
+                            <button
+                                onClick={handleAddChild}
+                                className="p-1.5 text-slate-400 hover:text-green-400 hover:bg-green-500/10 rounded"
+                                title="하위 조직 추가"
+                            >
+                                <Plus size={14} />
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded"
+                                title="삭제"
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { getOrgMembers, createMemberInOrg, removeMemberFromOrg, updateMemberInOrg } from '../api/org_api';
 import type { Member, OrgUnit } from '../api/org_api';
 import { parsePosition } from '../utils/memberParser';
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function OrgDetailPanel({ orgUnit, onClose }: Props) {
+    const { isAdmin } = useAuth();
     const [members, setMembers] = useState<Member[]>([]);
     const [loading, setLoading] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -172,13 +174,15 @@ export default function OrgDetailPanel({ orgUnit, onClose }: Props) {
 
                 {/* Add/Edit Form Toggle */}
                 {!showAddForm ? (
-                    <button
-                        onClick={() => setShowAddForm(true)}
-                        className="w-full py-3 border border-dashed border-slate-700 rounded-xl text-slate-400 hover:text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all flex items-center justify-center gap-2 mb-6"
-                    >
-                        <UserPlus size={20} />
-                        새 성도 등록하기
-                    </button>
+                    isAdmin && (
+                        <button
+                            onClick={() => setShowAddForm(true)}
+                            className="w-full py-3 border border-dashed border-slate-700 rounded-xl text-slate-400 hover:text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all flex items-center justify-center gap-2 mb-6"
+                        >
+                            <UserPlus size={20} />
+                            새 성도 등록하기
+                        </button>
+                    )
                 ) : (
                     <form onSubmit={handleSubmit} className="bg-slate-800/50 p-4 rounded-xl mb-6 space-y-3 border border-slate-700">
                         <div className="flex justify-between items-center mb-2">
@@ -293,22 +297,24 @@ export default function OrgDetailPanel({ orgUnit, onClose }: Props) {
                                             </div>
                                         )}
                                     </div>
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
-                                            onClick={() => handleEditClick(member)}
-                                            className="text-slate-500 hover:text-blue-400 p-1.5 hover:bg-blue-500/10 rounded transition-colors"
-                                            title="수정"
-                                        >
-                                            <Edit2 size={16} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleRemoveMember(member.id, member.name)}
-                                            className="text-slate-500 hover:text-red-400 p-1.5 hover:bg-red-500/10 rounded transition-colors"
-                                            title="삭제"
-                                        >
-                                            <X size={16} />
-                                        </button>
-                                    </div>
+                                    {isAdmin && (
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => handleEditClick(member)}
+                                                className="text-slate-500 hover:text-blue-400 p-1.5 hover:bg-blue-500/10 rounded transition-colors"
+                                                title="수정"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleRemoveMember(member.id, member.name)}
+                                                className="text-slate-500 hover:text-red-400 p-1.5 hover:bg-red-500/10 rounded transition-colors"
+                                                title="삭제"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    )}
                                 </li>
                             ))}
                         </ul>
