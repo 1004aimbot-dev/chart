@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = (password: string) => {
         // Simple hardcoded password for now. Ideally use env var.
-        const validPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'shinkwang1234';
+        const validPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'sk1234';
         if (password === validPassword) {
             setIsAdmin(true);
             localStorage.setItem('isAdmin', 'true');
