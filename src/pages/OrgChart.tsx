@@ -62,7 +62,7 @@ export default function OrgChart() {
     if (loading) return <div className="p-8 text-center text-gray-500">조직도를 불러오는 중...</div>;
 
     return (
-        <div className="flex flex-col md:flex-row h-[calc(100vh-100px)] gap-6 overflow-hidden relative">
+        <div className="flex flex-col md:flex-row h-auto min-h-[calc(100vh-100px)] md:h-[calc(100vh-100px)] gap-6 overflow-visible md:overflow-hidden relative">
             {/* Left: Tree View */}
             <div className={`flex-1 flex flex-col space-y-4 transition-all duration-300 w-full ${selectedUnit ? 'md:w-2/3' : 'md:w-full'}`}>
                 <div className="flex justify-between items-center bg-slate-900 p-4 rounded-xl shadow-lg border border-slate-800">
@@ -79,7 +79,7 @@ export default function OrgChart() {
                     </button>
                 </div>
 
-                <div className="bg-slate-900 p-6 rounded-xl shadow-lg border border-slate-800 flex-1 overflow-y-auto custom-scrollbar">
+                <div className="bg-slate-900 p-6 rounded-xl shadow-lg border border-slate-800 flex-1 overflow-visible md:overflow-y-auto custom-scrollbar">
                     {tree.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-slate-500 gap-4">
                             <Users size={48} className="text-slate-700" />
@@ -220,12 +220,6 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
                         <div className="flex items-center gap-2 flex-wrap">
                             <span className={`font-medium ${isSelected ? 'text-slate-900' : 'text-slate-100'} ${level === 0 ? 'text-xl' : 'text-base'}`}>
                                 {node.name}
-                            </span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full border uppercase tracking-wider font-semibold ${isSelected
-                                ? 'bg-blue-100 border-blue-200 text-blue-700'
-                                : 'bg-slate-800 border-slate-600 text-slate-400'
-                                }`}>
-                                {node.type}
                             </span>
                         </div>
                     )}
