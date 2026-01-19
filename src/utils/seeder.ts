@@ -2,6 +2,8 @@ import { supabase } from '../lib/supabase';
 
 const CHOIRS = ['글로리아', '임마누엘', '갈릴리'];
 const PRAISE_TEAMS = ['찬양단 1', '찬양단 2', '찬양단 3'];
+// Add Janghohoe to a list if needed, or just insert it manually below.
+const ROOT_UNITS = ['찬양대', '찬양단', '위원회', '장호회'];
 
 export async function seedDatabase() {
     console.log('Starting seed...');
@@ -98,6 +100,14 @@ export async function seedDatabase() {
 
     const { error: shipError } = await supabase.from('memberships').insert(membershipsToCreate);
     if (shipError) console.error('Error creating memberships:', shipError);
+
+    // 4. Create Janghohoe (Root)
+    const { error: jangError } = await supabase
+        .from('org_units')
+        .insert({ name: '장호회', type: 'root' });
+    if (jangError) console.error('Error creating Janghohoe:', jangError);
+
+
 
     console.log('Seeding complete!');
     alert('Seeding complete! Refresh the page.');

@@ -38,17 +38,40 @@ export default function Members() {
         setLoading(true);
         try {
             // 1. Fetch all types
-            const [choirs, teams, committees] = await Promise.all([
+            const [choirs, teams, committees, roots] = await Promise.all([
                 getOrgUnitsByType('choir'),
                 getOrgUnitsByType('team'),
-                getOrgUnitsByType('committee')
+                getOrgUnitsByType('committee'),
+                getOrgUnitsByType('root')
             ]);
 
             // 2. Categorize Units
             // "Music" units: type is choir/team OR name contains "찬양단"
-            const allCommittees = committees || [];
+            // Include roots in the "Committee/Admin" list
+            const allCommittees = [...(committees || []), ...(roots || [])];
+            const musicCommitees = allCommittees.filter(c => c.name.includes('찬양단') || c.name.includes('찬양대')); // Also treat "Chanyang-dae" root as Music side if present? 
+            // Actually, "Chanyang-dae" is usually the parent of "Gloria". 
+            // If "Chanyang-dae" has no members, it displays with 0.
+            // But usually "Chanyang-dae" is the HEADER. 
+            // Valid "Music" groups are Choirs/Teams.
+            // Let's stick to the previous logic but ensure "Janghohoe" (which is a Root) goes to adminCommittees.
+
+            const musicKeywords = ['찬양단', '찬양대', '성가대'];
+            // "Chanyang-dae" (Root) usually doesn't have members. "Gloria" (Choir) does.
+            // If "Chanyang-dae" is shown in Music Table, it will likely be empty.
+            // If "Janghohoe" is shown in Admin Table, it is correct.
+
+            // Let's keep logic simple:
+            // Music = Choirs + Teams + any group with '찬양' in name (except the Root '찬양대' if it's just a folder? No, user might assign members to it directly).
+
             const musicCommitees = allCommittees.filter(c => c.name.includes('찬양단'));
+            // Note: '찬양대' (Root) might NOT be in 'musicCommitees' if we only look for '찬양단'.
+            // If '찬양대' is a Root, it lands in 'adminCommittees' (Committee Table) with this logic:
+
             const adminCommittees = allCommittees.filter(c => !c.name.includes('찬양단'));
+
+            // If '찬양대' goes to Committee Table, it might look weird if it's empty.
+            // But per user request "Root에 생성되는 단체는 무조건 추가".
 
             const musicUnits = [
                 ...(choirs || []),
@@ -56,7 +79,7 @@ export default function Members() {
                 ...musicCommitees
             ];
 
-            // Remove duplicates by ID
+            // Remove duplicates by ID (in case a unit is both in 'roots' and 'committees' ? Unlikely but safe)
             const uniqueMusicUnits = Array.from(new Map(musicUnits.map(item => [item.id, item])).values());
 
             // 3. Process Music Stats (Parts)
@@ -164,7 +187,7 @@ export default function Members() {
 
             {/* Committee Table */}
             <div className="space-y-4">
-                <h3 className="text-lg font-bold text-slate-300 border-l-4 border-green-500 pl-3">위원회</h3>
+                <h3 className="text-lg font-bold text-slate-300 border-l-4 border-green-500 pl-3">위원회 / 기타</h3>
                 <div className="bg-slate-900 rounded-xl shadow-sm border border-slate-800 overflow-hidden">
                     {loading ? (
                         <div className="p-8 text-center text-slate-500">로딩 중...</div>

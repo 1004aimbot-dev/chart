@@ -143,7 +143,7 @@ export default function OrgDetailPanel({ orgUnit, onClose }: Props) {
                                     const count = members.filter(m => (m.position || '').includes(partName)).length;
                                     return (
                                         <div key={partName} className="flex flex-col">
-                                            <span className="text-[10px] text-slate-400 uppercase">{partName}</span>
+                                            <span className="text-[11px] text-slate-400 uppercase">{partName}</span>
                                             <span className={`font-bold ${count > 0 ? 'text-blue-400' : 'text-slate-600'}`}>{count}</span>
                                         </div>
                                     );
