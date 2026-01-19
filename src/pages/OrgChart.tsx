@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getOrgTree, createOrgUnit, deleteOrgUnit, updateOrgUnit } from '../api/org_api';
 import type { OrgUnit } from '../api/org_api';
-import { Users, ChevronRight, ChevronDown, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { Users, ChevronRight, ChevronDown, Plus, Trash2, Edit2, Check, X, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import OrgDetailPanel from '../components/OrgDetailPanel';
 
 export default function OrgChart() {
@@ -10,6 +10,7 @@ export default function OrgChart() {
     const [tree, setTree] = useState<OrgUnit[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedUnit, setSelectedUnit] = useState<OrgUnit | null>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         loadTree();
@@ -59,16 +60,21 @@ export default function OrgChart() {
         }
     };
 
+    const handlePan = (dx: number, dy: number) => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollBy({ left: dx, top: dy, behavior: 'smooth' });
+        }
+    };
+
     if (loading) return <div className="p-8 text-center text-gray-500">조직도를 불러오는 중...</div>;
 
     return (
         <div className="flex flex-col md:flex-row h-auto min-h-[calc(100vh-100px)] md:h-[calc(100vh-100px)] gap-6 overflow-visible md:overflow-hidden relative">
             {/* Left: Tree View */}
-            <div className={`flex-1 flex flex-col space-y-4 transition-all duration-300 w-full ${selectedUnit ? 'md:w-2/3' : 'md:w-full'}`}>
+            <div className={`flex-1 flex flex-col space-y-4 transition-all duration-300 w-full relative ${selectedUnit ? 'md:w-2/3' : 'md:w-full'}`}>
                 <div className="flex justify-between items-center bg-slate-900 p-4 rounded-xl shadow-lg border border-slate-800">
                     <div>
                         <h2 className="text-2xl font-bold text-slate-100 font-serif">조직도</h2>
-                        <p className="text-sm text-slate-400">조직을 클릭하여 구성원을 관리하세요.</p>
                     </div>
                     <button
                         onClick={handleAddRoot}
@@ -79,7 +85,10 @@ export default function OrgChart() {
                     </button>
                 </div>
 
-                <div className="bg-slate-900 p-6 rounded-xl shadow-lg border border-slate-800 flex-1 overflow-visible md:overflow-y-auto custom-scrollbar">
+                <div
+                    ref={scrollContainerRef}
+                    className="bg-slate-900 p-6 rounded-xl shadow-lg border border-slate-800 flex-1 overflow-visible md:overflow-y-auto custom-scrollbar relative"
+                >
                     {tree.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-slate-500 gap-4">
                             <Users size={48} className="text-slate-700" />
@@ -98,6 +107,16 @@ export default function OrgChart() {
                             />
                         ))
                     )}
+                </div>
+
+                {/* Pan Controls */}
+                <div className="hidden md:flex absolute bottom-6 right-6 flex-col items-center gap-1 bg-slate-800/90 p-2 rounded-xl backdrop-blur-sm border border-slate-700 shadow-xl z-10">
+                    <button onClick={() => handlePan(0, -100)} className="p-2 hover:bg-slate-700 text-slate-300 rounded-lg active:scale-95 transition-transform" title="위로"><ArrowUp size={20} /></button>
+                    <div className="flex gap-1">
+                        <button onClick={() => handlePan(-100, 0)} className="p-2 hover:bg-slate-700 text-slate-300 rounded-lg active:scale-95 transition-transform" title="좌로"><ArrowLeft size={20} /></button>
+                        <button onClick={() => handlePan(100, 0)} className="p-2 hover:bg-slate-700 text-slate-300 rounded-lg active:scale-95 transition-transform" title="우로"><ArrowRight size={20} /></button>
+                    </div>
+                    <button onClick={() => handlePan(0, 100)} className="p-2 hover:bg-slate-700 text-slate-300 rounded-lg active:scale-95 transition-transform" title="아래로"><ArrowDown size={20} /></button>
                 </div>
             </div>
 
@@ -182,8 +201,8 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
     return (
         <div className="select-none">
             <div
-                className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-all group ${isSelected ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-200' : 'hover:bg-slate-800 border-transparent'
-                    } ${level === 0 ? 'mb-2' : 'mb-1'}`}
+                className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all group ${isSelected ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-200' : 'hover:bg-slate-800 border-transparent'
+                    } ${level === 0 ? 'mb-1' : 'mb-0.5'}`}
                 style={{ marginLeft: `${level * 20}px` }}
                 onClick={() => !isEditing && onSelect(node)}
             >
