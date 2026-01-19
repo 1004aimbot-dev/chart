@@ -121,7 +121,7 @@ export default function OrgDetailPanel({ orgUnit, onClose }: Props) {
             {/* Header */}
             <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900">
                 <div>
-                    <h3 className="font-bold text-lg text-white font-serif">{orgUnit.name}</h3>
+                    <h3 className="font-bold text-lg text-white font-serif">{orgUnit.name.replace(/.*\((.*)\)/, '$1')}</h3>
                     <span className="text-xs text-slate-400 bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-full uppercase tracking-wider">
                         {orgUnit.type}
                     </span>
@@ -262,7 +262,7 @@ export default function OrgDetailPanel({ orgUnit, onClose }: Props) {
                                 <li key={member.id} className="py-3 flex justify-between items-start group hover:bg-slate-800/50 -mx-2 px-2 rounded-lg transition-colors">
                                     <div className="flex-1">
                                         <div className="font-medium text-slate-200 flex items-center gap-2">
-                                            {member.name}
+                                            {member.name.replace(/.*\((.*)\)/, '$1')}
                                             {member.position && (() => {
                                                 const { part, job } = parsePosition(member.position);
                                                 return (
@@ -287,8 +287,8 @@ export default function OrgDetailPanel({ orgUnit, onClose }: Props) {
                                             })()}
                                         </div>
                                         {member.phone && (
-                                            <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                                                <Phone size={10} />
+                                            <div className="text-sm text-slate-500 flex items-center gap-1 mt-1 font-medium">
+                                                <Phone size={14} />
                                                 {member.phone}
                                             </div>
                                         )}

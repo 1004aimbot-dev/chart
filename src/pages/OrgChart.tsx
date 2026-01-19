@@ -218,7 +218,7 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
                         </div>
                     ) : (
                         <div className="flex items-center gap-2 min-w-0">
-                            <span className={`font-medium whitespace-nowrap ${isSelected ? 'text-slate-900' : 'text-slate-100'} ${level === 0 ? 'text-xl' : 'text-base'}`}>
+                            <span className={`font-medium whitespace-nowrap ${isSelected ? 'text-slate-900' : (level === 0 ? 'text-blue-400 font-bold' : 'text-slate-100')} ${level === 0 ? 'text-xl' : 'text-base'}`}>
                                 {node.name.replace(/.*\((.*)\)/, '$1')}
                             </span>
                         </div>
