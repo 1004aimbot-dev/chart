@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabase';
-import type { Database } from '../types/supabase'; // We might need to generate types, but for now we'll imply them or use 'any' carefully
 
 export interface OrgUnit {
     id: string;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getOrgMembers, createMemberInOrg, removeMemberFromOrg, updateMemberInOrg } from '../api/org_api';
 import type { Member, OrgUnit } from '../api/org_api';
-import { parsePosition, PARTS, JOBS } from '../utils/memberParser';
+import { parsePosition } from '../utils/memberParser';
 import { UserPlus, Phone, X, Edit2, Save } from 'lucide-react';
 
 import { supabase } from '../lib/supabase';
@@ -134,6 +134,42 @@ export default function OrgDetailPanel({ orgUnit, onClose }: Props) {
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
 
+                {/* Composition Stats */}
+                {!loading && members.length > 0 && (
+                    <div className="mb-6 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
+                        {orgUnit.type === 'choir' || orgUnit.type === 'team' ? (
+                            <div className="grid grid-cols-4 gap-2 text-center">
+                                {['소프라노', '알토', '테너', '베이스'].map(partName => {
+                                    const count = members.filter(m => (m.position || '').includes(partName)).length;
+                                    return (
+                                        <div key={partName} className="flex flex-col">
+                                            <span className="text-[10px] text-slate-400 uppercase">{partName}</span>
+                                            <span className={`font-bold ${count > 0 ? 'text-blue-400' : 'text-slate-600'}`}>{count}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center text-center">
+                                {['위원장', '부위원장', '부장', '차장', '회계', '서기', '대원'].map(targetJob => {
+                                    const count = members.filter(m => {
+                                        const { job } = parsePosition(m.position);
+                                        return job === targetJob;
+                                    }).length;
+
+                                    if (count === 0) return null;
+                                    return (
+                                        <div key={targetJob} className="flex gap-1.5 items-center">
+                                            <span className="text-[10px] text-slate-400">{targetJob}</span>
+                                            <span className="text-sm font-bold text-blue-400">{count}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Add/Edit Form Toggle */}
                 {!showAddForm ? (
                     <button
@@ -180,6 +216,7 @@ export default function OrgDetailPanel({ orgUnit, onClose }: Props) {
                             >
                                 <option value="">직책 선택</option>
                                 <option value="위원장">위원장</option>
+                                <option value="부위원장">부위원장</option>
                                 <option value="부장">부장</option>
                                 <option value="차장">차장</option>
                                 <option value="파트장">파트장</option>

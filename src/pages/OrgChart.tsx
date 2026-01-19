@@ -128,7 +128,6 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
     const isSelected = selectedId === node.id;
 
     // Editing State
-    const [isHovered, setIsHovered] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(node.name);
 
@@ -187,8 +186,6 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
                     } ${level === 0 ? 'mb-2' : ''}`}
                 style={{ marginLeft: `${level * 24}px` }}
                 onClick={() => !isEditing && onSelect(node)}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
             >
                 {/* Toggle Icon */}
                 <div

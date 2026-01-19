@@ -11,7 +11,7 @@ export default function Layout() {
 
     const navItems = [
         { path: '/org', label: '조직도', icon: Network },
-        { path: '/members', label: '성도 관리', icon: Users },
+        { path: '/members', label: '인원구성', icon: Users },
         { path: '/attendance', label: '출석 체크', icon: UserCheck },
     ];
 

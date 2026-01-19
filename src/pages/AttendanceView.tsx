@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
-import { Calendar, Users, CheckCircle, XCircle, Clock, FileText, ChevronDown, ChevronUp, Save, Edit2 } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, Clock, FileText, Save, Edit2 } from 'lucide-react';
 import { getOrgUnitsByType, getOrgMembers, updateMemberInOrg } from '../api/org_api';
 import { parsePosition } from '../utils/memberParser';
 import { getAttendanceByDate, upsertAttendance } from '../api/attendance_api';
@@ -128,26 +127,33 @@ export default function AttendanceView() {
         }
     };
 
-    // Name Edit Logic
+    // Name & Position Edit Logic
     const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
-    const [editName, setEditName] = useState('');
+    const [editData, setEditData] = useState({ name: '', position: '' });
 
-    const startEditingName = (member: Member) => {
+    const startEditing = (member: Member) => {
         setEditingMemberId(member.id);
-        setEditName(member.name);
+        setEditData({ name: member.name, position: member.position || '' });
     };
 
-    const saveName = async (member: Member) => {
-        if (!editName.trim()) return;
+    const saveEdit = async (member: Member) => {
+        if (!editData.name.trim()) return;
         try {
-            await updateMemberInOrg(selectedOrgId, member.id, { name: editName });
+            await updateMemberInOrg(selectedOrgId, member.id, {
+                name: editData.name,
+                position: editData.position
+            });
 
-            // Update local state by refetching or optimistic
-            setMembers(prev => prev.map(m => m.id === member.id ? { ...m, name: editName } : m));
+            // Update local state
+            setMembers(prev => prev.map(m => m.id === member.id ? {
+                ...m,
+                name: editData.name,
+                position: editData.position
+            } : m));
             setEditingMemberId(null);
         } catch (err: any) {
             console.error(err);
-            alert('이름 수정 실패: ' + err.message);
+            alert('수정 실패: ' + err.message);
         }
     };
 
@@ -229,15 +235,24 @@ export default function AttendanceView() {
                                                 {editingMemberId === member.id ? (
                                                     <div className="flex items-center gap-2">
                                                         <input
-                                                            value={editName}
-                                                            onChange={e => setEditName(e.target.value)}
-                                                            className="bg-slate-800 border border-blue-500 text-white px-2 py-0.5 rounded focus:outline-none w-32"
+                                                            value={editData.name}
+                                                            onChange={e => setEditData(prev => ({ ...prev, name: e.target.value }))}
+                                                            className="bg-slate-800 border border-blue-500 text-white px-2 py-0.5 rounded focus:outline-none w-24"
+                                                            placeholder="이름"
                                                             autoFocus
-                                                            onKeyDown={e => e.key === 'Enter' && saveName(member)}
+                                                            onKeyDown={e => e.key === 'Enter' && saveEdit(member)}
+                                                            onClick={e => e.stopPropagation()}
+                                                        />
+                                                        <input
+                                                            value={editData.position}
+                                                            onChange={e => setEditData(prev => ({ ...prev, position: e.target.value }))}
+                                                            className="bg-slate-800 border border-slate-600 focus:border-blue-500 text-slate-200 px-2 py-0.5 rounded focus:outline-none w-28 text-sm"
+                                                            placeholder="직책"
+                                                            onKeyDown={e => e.key === 'Enter' && saveEdit(member)}
                                                             onClick={e => e.stopPropagation()}
                                                         />
                                                         <button
-                                                            onClick={(e) => { e.stopPropagation(); saveName(member); }}
+                                                            onClick={(e) => { e.stopPropagation(); saveEdit(member); }}
                                                             className="text-blue-500 hover:text-blue-400 p-1"
                                                         >
                                                             <Save size={16} />
@@ -247,12 +262,12 @@ export default function AttendanceView() {
                                                     <div className="flex items-center gap-2 group/name">
                                                         <span
                                                             className="font-bold text-lg text-white cursor-pointer hover:text-blue-200 transition-colors"
-                                                            onClick={(e) => { e.stopPropagation(); startEditingName(member); }}
+                                                            onClick={(e) => { e.stopPropagation(); startEditing(member); }}
                                                         >
                                                             {member.name}
                                                         </span>
                                                         <button
-                                                            onClick={(e) => { e.stopPropagation(); startEditingName(member); }}
+                                                            onClick={(e) => { e.stopPropagation(); startEditing(member); }}
                                                             className="opacity-0 group-hover/name:opacity-100 text-slate-500 hover:text-blue-400 transition-all p-1"
                                                         >
                                                             <Edit2 size={14} />

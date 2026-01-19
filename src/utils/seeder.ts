@@ -62,6 +62,37 @@ export async function seedDatabase() {
         role: 'leader'
     });
 
+    // Add Vice Chairman
+    const viceLeaderId = crypto.randomUUID();
+    membersToCreate.push({
+        id: viceLeaderId,
+        name: `Sample Vice Chairman`,
+        role: 'member'
+    });
+
+    // Add membership for leader
+    // (Note: The original code didn't add membership for the leader in step 64! Ideally it should have.)
+    // Let's modify to insert membership for the singular leader and this new vice chairman into the LAST unit generated.
+
+    // Actually, looking at original code, it PUSHES only to membersToCreate in lines 60-63.
+    // It does NOT create membership for the leader?! 
+    // That's a bug in the existing seeder too, or maybe leader is just a member role type.
+    // Let's just follow the pattern but ensure we create a MEMBERSHIP so they appear in the organization unit.
+
+    // We need a unit ID. Let's use the first unit.
+    if (units.length > 0) {
+        membershipsToCreate.push({
+            member_id: leaderId,
+            org_unit_id: units[0].id,
+            position: '위원장'
+        });
+        membershipsToCreate.push({
+            member_id: viceLeaderId,
+            org_unit_id: units[0].id,
+            position: '부위원장'
+        });
+    }
+
     const { error: membersError } = await supabase.from('members').insert(membersToCreate);
     if (membersError) console.error('Error creating members:', membersError);
 
