@@ -49,26 +49,8 @@ export default function Members() {
             // "Music" units: type is choir/team OR name contains "찬양단"
             // Include roots in the "Committee/Admin" list
             const allCommittees = [...(committees || []), ...(roots || [])];
-            const musicCommitees = allCommittees.filter(c => c.name.includes('찬양단') || c.name.includes('찬양대')); // Also treat "Chanyang-dae" root as Music side if present? 
-            // Actually, "Chanyang-dae" is usually the parent of "Gloria". 
-            // If "Chanyang-dae" has no members, it displays with 0.
-            // But usually "Chanyang-dae" is the HEADER. 
-            // Valid "Music" groups are Choirs/Teams.
-            // Let's stick to the previous logic but ensure "Janghohoe" (which is a Root) goes to adminCommittees.
-
-            const musicKeywords = ['찬양단', '찬양대', '성가대'];
-            // "Chanyang-dae" (Root) usually doesn't have members. "Gloria" (Choir) does.
-            // If "Chanyang-dae" is shown in Music Table, it will likely be empty.
-            // If "Janghohoe" is shown in Admin Table, it is correct.
-
-            // Let's keep logic simple:
-            // Music = Choirs + Teams + any group with '찬양' in name (except the Root '찬양대' if it's just a folder? No, user might assign members to it directly).
-
-            const musicCommitees = allCommittees.filter(c => c.name.includes('찬양단'));
-            // Note: '찬양대' (Root) might NOT be in 'musicCommitees' if we only look for '찬양단'.
-            // If '찬양대' is a Root, it lands in 'adminCommittees' (Committee Table) with this logic:
-
-            const adminCommittees = allCommittees.filter(c => !c.name.includes('찬양단'));
+            const musicCommitees = allCommittees.filter(c => c.name.includes('찬양단') || c.name.includes('찬양대'));
+            const adminCommittees = allCommittees.filter(c => !c.name.includes('찬양단') && !c.name.includes('찬양대'));
 
             // If '찬양대' goes to Committee Table, it might look weird if it's empty.
             // But per user request "Root에 생성되는 단체는 무조건 추가".
