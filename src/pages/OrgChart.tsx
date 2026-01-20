@@ -1,10 +1,12 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import { getOrgTree, createOrgUnit, deleteOrgUnit, updateOrgUnit } from '../api/org_api';
 import type { OrgUnit } from '../api/org_api';
 import { Users, ChevronRight, ChevronDown, Plus, Trash2, Edit2, Check, X, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import OrgDetailPanel from '../components/OrgDetailPanel';
+import PromptModal from '../components/PromptModal';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function OrgChart() {
     const { isAdmin } = useAuth();
@@ -13,6 +15,68 @@ export default function OrgChart() {
     const [loading, setLoading] = useState(true);
     const [selectedUnit, setSelectedUnit] = useState<OrgUnit | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Modal State
+    const [modalConfig, setModalConfig] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        defaultValue: '',
+        onConfirm: async (_val: string) => { },
+        onCancel: () => { }
+    });
+
+    // Confirm Modal State
+    const [confirmConfig, setConfirmConfig] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: async () => { },
+        onCancel: () => { }
+    });
+
+    const requestPrompt = useCallback((title: string, defaultValue: string = '', onConfirm: (val: string) => Promise<void>) => {
+        return new Promise<void>((resolve) => {
+            setModalConfig({
+                isOpen: true,
+                title,
+                message: '',
+                defaultValue,
+                onConfirm: async (val) => {
+                    await onConfirm(val);
+                    closeModal();
+                    resolve();
+                },
+                onCancel: () => {
+                    closeModal();
+                    resolve();
+                }
+            });
+        });
+    }, []);
+
+
+
+    const requestConfirm = useCallback((title: string, message: string, onConfirm: () => Promise<void>) => {
+        setConfirmConfig({
+            isOpen: true,
+            title,
+            message,
+            onConfirm: async () => {
+                await onConfirm();
+                closeConfirm();
+            },
+            onCancel: () => closeConfirm()
+        });
+    }, []);
+
+    const closeConfirm = () => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+    };
+
+    const closeModal = () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+    };
 
     useEffect(() => {
         loadTree();
@@ -52,14 +116,15 @@ export default function OrgChart() {
     };
 
     const handleAddRoot = async () => {
-        const name = prompt('새로운 최상위 조직의 이름을 입력하세요:');
-        if (!name) return;
-        try {
-            await createOrgUnit({ name, type: 'root', parent_id: null });
-            loadTree();
-        } catch (error: any) {
-            alert('생성 실패: ' + error.message);
-        }
+        requestPrompt('새로운 최상위 조직 추가', '', async (name) => {
+            if (!name) return;
+            try {
+                await createOrgUnit({ name, type: 'root', parent_id: null });
+                loadTree();
+            } catch (error: any) {
+                alert('생성 실패: ' + error.message);
+            }
+        });
     };
 
     const handlePan = (dx: number, dy: number) => {
@@ -108,6 +173,8 @@ export default function OrgChart() {
                                 onSelect={setSelectedUnit}
                                 selectedId={selectedUnit?.id}
                                 onRefresh={loadTree}
+                                requestPrompt={requestPrompt}
+                                requestConfirm={requestConfirm}
                             />
                         ))
                     )}
@@ -130,9 +197,29 @@ export default function OrgChart() {
                     <OrgDetailPanel
                         orgUnit={selectedUnit}
                         onClose={() => setSelectedUnit(null)}
+                        onOrgUpdate={loadTree}
                     />
                 </div>
             )}
+
+            <PromptModal
+                isOpen={modalConfig.isOpen}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                defaultValue={modalConfig.defaultValue}
+                onConfirm={modalConfig.onConfirm}
+                onCancel={modalConfig.onCancel}
+            />
+
+            <ConfirmModal
+                isOpen={confirmConfig.isOpen}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                onConfirm={confirmConfig.onConfirm}
+                onCancel={confirmConfig.onCancel}
+                isDanger={true}
+                confirmText="삭제"
+            />
         </div>
     );
 }
@@ -143,9 +230,12 @@ interface OrgNodeProps {
     onSelect: (node: OrgUnit) => void;
     selectedId?: string;
     onRefresh: () => void;
+    onRefresh: () => void;
+    requestPrompt: (title: string, defaultValue: string, onConfirm: (val: string) => Promise<void>) => void;
+    requestConfirm: (title: string, message: string, onConfirm: () => Promise<void>) => void;
 }
 
-function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps) {
+function OrgNode({ node, level, onSelect, selectedId, onRefresh, requestPrompt, requestConfirm }: OrgNodeProps) {
     const { isAdmin } = useAuth();
     const [isOpen, setIsOpen] = useState(true);
     const hasChildren = node.children && node.children.length > 0;
@@ -162,34 +252,42 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
 
     const handleAddChild = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        const name = prompt(`${node.name} 아래에 추가할 하위 조직 이름:`);
-        if (!name) return;
 
-        // Simple type inference (optional improvement later)
-        let type = 'department';
-        if (node.type === 'root') type = 'committee';
-        if (node.type === 'committee') type = 'department';
-        if (node.type === 'department') type = 'team';
+        requestPrompt(`${node.name} 하위 조직 추가`, '', async (name) => {
+            if (!name) return;
 
-        try {
-            await createOrgUnit({ name, type, parent_id: node.id });
-            setIsOpen(true);
-            onRefresh();
-        } catch (err: any) {
-            alert('추가 실패: ' + err.message);
-        }
+            // Simple type inference (optional improvement later)
+            let type = 'department';
+            if (node.type === 'root') type = 'committee';
+            if (node.type === 'committee') type = 'department';
+            if (node.type === 'department') type = 'team';
+
+            try {
+                await createOrgUnit({ name, type, parent_id: node.id });
+                setIsOpen(true);
+                onRefresh();
+            } catch (err: any) {
+                alert('추가 실패: ' + err.message);
+            }
+        });
     };
 
     const handleDelete = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!confirm(`'${node.name}' 조직을 삭제하시겠습니까?\n하위 조직도 모두 연결이 끊기거나 삭제될 수 있습니다.`)) return;
-        try {
-            await deleteOrgUnit(node.id);
-            onSelect(null as any); // Deselect
-            onRefresh();
-        } catch (err: any) {
-            alert('삭제 실패: ' + err.message);
-        }
+
+        requestConfirm(
+            `'${node.name}' 조직 삭제`,
+            `정말 '${node.name}' 조직을 삭제하시겠습니까?\n하위 조직이 있다면 함께 삭제될 수 있습니다.`,
+            async () => {
+                try {
+                    await deleteOrgUnit(node.id);
+                    onSelect(null as any); // Deselect
+                    onRefresh();
+                } catch (err: any) {
+                    alert('삭제 실패: ' + err.message);
+                }
+            }
+        );
     };
 
     const handleUpdate = async (e: React.MouseEvent) => {
@@ -249,8 +347,8 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
                     )}
                 </div>
 
-                {/* Actions (Hover only or Always on Edit) */}
-                <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${isEditing ? 'hidden' : ''}`}>
+                {/* Actions (Always visible for better UX) */}
+                <div className={`flex items-center gap-1 transition-opacity ${isEditing ? 'hidden' : ''}`}>
                     {isAdmin && (
                         <>
                             <button
@@ -292,6 +390,7 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
                             onSelect={onSelect}
                             selectedId={selectedId}
                             onRefresh={onRefresh}
+                            requestPrompt={requestPrompt}
                         />
                     ))}
                 </div>
@@ -299,3 +398,4 @@ function OrgNode({ node, level, onSelect, selectedId, onRefresh }: OrgNodeProps)
         </div>
     );
 }
+

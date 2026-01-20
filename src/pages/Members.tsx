@@ -27,6 +27,7 @@ interface CommitteeStat {
 
 export default function Members() {
     const [choirStats, setChoirStats] = useState<ChoirStat[]>([]);
+    const [elderStats, setElderStats] = useState<CommitteeStat[]>([]);
     const [committeeStats, setCommitteeStats] = useState<CommitteeStat[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -50,7 +51,16 @@ export default function Members() {
             // Include roots in the "Committee/Admin" list
             const allCommittees = [...(committees || []), ...(roots || [])];
             const musicCommitees = allCommittees.filter(c => c.name.includes('찬양단') || c.name.includes('찬양대'));
-            const adminCommittees = allCommittees.filter(c => !c.name.includes('찬양단') && !c.name.includes('찬양대'));
+
+            // Separate Elders (Root '장로회')
+            const elderUnits = allCommittees.filter(c => c.name === '장로회');
+
+            // Other Committees (Rest)
+            const adminCommittees = allCommittees.filter(c =>
+                !c.name.includes('찬양단') &&
+                !c.name.includes('찬양대') &&
+                c.name !== '장로회'
+            );
 
             // If '찬양대' goes to Committee Table, it might look weird if it's empty.
             // But per user request "Root에 생성되는 단체는 무조건 추가".
@@ -59,7 +69,7 @@ export default function Members() {
                 ...(choirs || []),
                 ...(teams || []),
                 ...musicCommitees
-            ];
+            ].filter(u => u.name !== '찬양대' && u.name !== '찬양단');
 
             // Remove duplicates by ID (in case a unit is both in 'roots' and 'committees' ? Unlikely but safe)
             const uniqueMusicUnits = Array.from(new Map(musicUnits.map(item => [item.id, item])).values());
@@ -82,33 +92,53 @@ export default function Members() {
             });
 
             // 4. Process Committee Stats (Roles)
-            const committeePromises = adminCommittees.map(async (unit: OrgUnit) => {
-                const members = await getOrgMembers(unit.id);
-                let chairman = 0, viceChairman = 0, manager = 0, deputy = 0, treasurer = 0, clerk = 0;
 
-                members.forEach(m => {
-                    const { job } = parsePosition(m.position);
-                    if (job === '위원장') chairman++;
-                    else if (job === '부위원장') viceChairman++;
-                    else if (job === '부장') manager++;
-                    else if (job === '차장') deputy++;
-                    else if (job === '회계') treasurer++;
-                    else if (job === '서기') clerk++;
+
+            // Filter out '위원회' from admin stats and process
+            const filteredCommitteePromises = adminCommittees
+                .filter(c => c.name !== '위원회')
+                .map(async (unit: OrgUnit) => {
+                    const members = await getOrgMembers(unit.id);
+                    let chairman = 0, viceChairman = 0, manager = 0, deputy = 0, treasurer = 0, clerk = 0;
+
+                    members.forEach(m => {
+                        const { job } = parsePosition(m.position);
+                        if (job === '위원장') chairman++;
+                        else if (job === '부위원장') viceChairman++;
+                        else if (job === '부장') manager++;
+                        else if (job === '차장') deputy++;
+                        else if (job === '회계') treasurer++;
+                        else if (job === '서기') clerk++;
+                    });
+
+                    return {
+                        id: unit.id, name: unit.name,
+                        chairman, viceChairman, manager, deputy, treasurer, clerk, total: members.length
+                    };
                 });
 
+            // Process Elder Stats
+            const elderPromises = elderUnits.map(async (unit: OrgUnit) => {
+                const members = await getOrgMembers(unit.id);
+                // Elders usually don't have these specific roles but using same structure for consistency
+                // Or maybe they do (Chairman = Representive Elder, etc.)
+                let chairman = 0, viceChairman = 0, manager = 0, deputy = 0, treasurer = 0, clerk = 0;
+                // Just counting totals mostly important for elders
                 return {
                     id: unit.id, name: unit.name,
                     chairman, viceChairman, manager, deputy, treasurer, clerk, total: members.length
                 };
             });
 
-            const [musicResults, committeeResults] = await Promise.all([
+            const [musicResults, committeeResults, elderResults] = await Promise.all([
                 Promise.all(musicPromises),
-                Promise.all(committeePromises)
+                Promise.all(filteredCommitteePromises),
+                Promise.all(elderPromises)
             ]);
 
             setChoirStats(musicResults);
             setCommitteeStats(committeeResults);
+            setElderStats(elderResults);
         } catch (error) {
             console.error('Error loading stats:', error);
         } finally {
@@ -119,6 +149,33 @@ export default function Members() {
     return (
         <div className="space-y-8">
             <h2 className="text-2xl font-bold text-white font-serif">인원구성</h2>
+
+            {/* Elder Table (Top Priority) */}
+            {elderStats.length > 0 && (
+                <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-slate-300 border-l-4 border-yellow-500 pl-3">당회 (장로회)</h3>
+                    <div className="bg-slate-900 rounded-xl shadow-sm border border-slate-800 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-950 text-slate-400 border-b border-slate-800">
+                                        <th className="p-4 font-medium w-full">조직명</th>
+                                        <th className="p-4 font-medium text-center whitespace-nowrap">총원</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800 text-slate-300">
+                                    {elderStats.map(stat => (
+                                        <tr key={stat.id} className="hover:bg-slate-800/50 transition-colors">
+                                            <td className="p-4 font-bold text-white text-lg">{stat.name}</td>
+                                            <td className="p-4 text-center font-bold text-white bg-slate-800/30 text-lg">{stat.total}명</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Choir/Team Table */}
             <div className="space-y-4">

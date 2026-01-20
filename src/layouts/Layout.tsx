@@ -21,7 +21,7 @@ export default function Layout() {
 
             {/* Mobile Header */}
             <div className="md:hidden bg-slate-900/80 backdrop-blur-md p-4 flex justify-between items-center shadow-sm border-b border-slate-800 z-20 relative">
-                <h1 className="font-bold text-xl text-white font-serif tracking-wide">신광교회</h1>
+                <h1 className="font-bold text-xl text-white font-serif tracking-wide">성남신광교회</h1>
                 <div className="flex items-center gap-4">
                     <button onClick={() => setIsSearchOpen(true)} className="text-slate-400 hover:text-white transition-colors">
                         <Search className="w-6 h-6" />
@@ -43,7 +43,7 @@ export default function Layout() {
                 isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 <div className="p-6 hidden md:block">
-                    <h1 className="font-bold text-2xl text-white font-serif tracking-wide">신광교회</h1>
+                    <h1 className="font-bold text-2xl text-white font-serif tracking-wide">성남신광교회</h1>
                     <p className="text-sm text-slate-500 font-medium tracking-wider uppercase">Church Management</p>
                 </div>
 

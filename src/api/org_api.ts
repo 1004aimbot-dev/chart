@@ -101,50 +101,107 @@ export interface Member {
     phone: string | null;
     role: 'member' | 'leader' | 'admin';
     position?: string; // stored in memberships.position
+    birthday?: string;
 }
 
 export async function getOrgMembers(orgId: string): Promise<Member[]> {
-    const { data, error } = await supabase
-        .from('memberships')
-        .select(`
-            position,
-            member:members (
-                id,
-                name,
-                phone,
-                role
-            )
-        `)
-        .eq('org_unit_id', orgId)
-        .eq('is_active', true);
+    try {
+        const { data, error } = await supabase
+            .from('memberships')
+            .select(`
+                position,
+                member:members (
+                    id,
+                    name,
+                    phone,
+                    role,
+                    birthday
+                )
+            `)
+            .eq('org_unit_id', orgId)
+            .eq('is_active', true);
 
-    if (error) {
+        if (error) throw error;
+
+        return data.map((item: any) => ({
+            ...item.member,
+            position: item.position
+        })).sort((a: any, b: any) => a.name.localeCompare(b.name, 'ko'));
+    } catch (error: any) {
+        // Retry without birthday if column missing
+        if (error.code === '42703' || error.code === 'PGRST204' || error.message?.includes('birthday')) {
+            console.warn('Birthday column missing in fetch, retrying without it...');
+            const { data, error: retryError } = await supabase
+                .from('memberships')
+                .select(`
+                    position,
+                    member:members (
+                        id,
+                        name,
+                        phone,
+                        role
+                    )
+                `)
+                .eq('org_unit_id', orgId)
+                .eq('is_active', true);
+
+            if (retryError) {
+                console.error('Error fetching members (retry):', retryError);
+                return [];
+            }
+
+            return data.map((item: any) => ({
+                ...item.member,
+                position: item.position
+            })).sort((a: any, b: any) => a.name.localeCompare(b.name, 'ko'));
+        }
+
         console.error('Error fetching members:', error);
         return [];
     }
-
-    return data.map((item: any) => ({
-        ...item.member,
-        position: item.position
-    })).sort((a: any, b: any) => a.name.localeCompare(b.name, 'ko'));
 }
 
 export async function createMemberInOrg(
     orgId: string,
-    memberData: { name: string; phone?: string; position?: string }
+    memberData: { name: string; phone?: string; position?: string; birthday?: string }
 ) {
     // 1. Create Member
-    const { data: member, error: memberError } = await supabase
-        .from('members')
-        .insert({
-            name: memberData.name,
-            phone: memberData.phone,
-            role: 'member'
-        })
-        .select()
-        .single();
+    // 1. Create Member
+    let member;
+    try {
+        const { data, error } = await supabase
+            .from('members')
+            .insert({
+                name: memberData.name,
+                phone: memberData.phone,
+                role: 'member',
+                birthday: memberData.birthday
+            })
+            .select()
+            .single();
 
-    if (memberError) throw memberError;
+        if (error) throw error;
+        member = data;
+    } catch (error: any) {
+        // Retry without birthday if column/schema error
+        if (error.code === '42703' || error.code === 'PGRST204' || error.message?.includes('birthday')) {
+            console.warn('Birthday column missing, retrying without it...');
+            const { data, error: retryError } = await supabase
+                .from('members')
+                .insert({
+                    name: memberData.name,
+                    phone: memberData.phone,
+                    role: 'member'
+                })
+                .select()
+                .single();
+
+            if (retryError) throw retryError;
+            member = data;
+        } else {
+            throw error;
+        }
+    }
 
     // 2. Link to Org (Membership)
     const { error: linkError } = await supabase
@@ -172,18 +229,37 @@ export async function removeMemberFromOrg(orgId: string, memberId: string) {
 export async function updateMemberInOrg(
     orgId: string,
     memberId: string,
-    data: { name: string; phone?: string; position?: string }
+    data: { name: string; phone?: string; position?: string; birthday?: string }
 ) {
     // 1. Update Member Info
-    const { error: memberError } = await supabase
-        .from('members')
-        .update({
-            name: data.name,
-            phone: data.phone
-        })
-        .eq('id', memberId);
+    try {
+        const { error: memberError } = await supabase
+            .from('members')
+            .update({
+                name: data.name,
+                phone: data.phone,
+                birthday: data.birthday
+            })
+            .eq('id', memberId);
 
-    if (memberError) throw memberError;
+        if (memberError) throw memberError;
+    } catch (error: any) {
+        // Retry without birthday if column/schema error
+        if (error.code === '42703' || error.code === 'PGRST204' || error.message?.includes('birthday')) {
+            console.warn('Birthday column missing, retrying without it...');
+            const { error: retryError } = await supabase
+                .from('members')
+                .update({
+                    name: data.name,
+                    phone: data.phone
+                })
+                .eq('id', memberId);
+
+            if (retryError) throw retryError;
+        } else {
+            throw error;
+        }
+    }
 
     // 2. Update Position (Membership)
     const { error: linkError } = await supabase
