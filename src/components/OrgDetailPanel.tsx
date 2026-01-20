@@ -99,6 +99,13 @@ export default function OrgDetailPanel({ orgUnit, onClose, onOrgUpdate }: Props)
         setLoading(false);
     };
 
+    const formatPhoneNumber = (value: string) => {
+        const numbers = value.replace(/[^0-9]/g, '');
+        if (numbers.length <= 3) return numbers;
+        if (numbers.length <= 7) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+        return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+    };
+
     const handleEditClick = (member: Member) => {
         setName(member.name);
         setPhone(member.phone || '');
@@ -283,7 +290,8 @@ export default function OrgDetailPanel({ orgUnit, onClose, onOrgUpdate }: Props)
                             className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="이름 (필수)"
                             value={name}
-                            onChange={e => setName(e.target.value)}
+                            inputMode="text"
+                            onChange={e => setName(e.target.value.replace(/[0-9]/g, ''))}
                         />
 
                         <div className="flex gap-2">
@@ -325,7 +333,10 @@ export default function OrgDetailPanel({ orgUnit, onClose, onOrgUpdate }: Props)
                             className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="전화번호 (선택)"
                             value={phone}
-                            onChange={e => setPhone(e.target.value)}
+                            type="tel"
+                            inputMode="numeric"
+                            onChange={e => setPhone(formatPhoneNumber(e.target.value))}
+                            maxLength={13}
                         />
 
                         <input
